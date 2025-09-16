@@ -4,6 +4,7 @@ middleware/
 migrations/
 scripts/
 config/
+server.js
 mock-server.js
 simple-server.js
 debug-server.js
