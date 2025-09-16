@@ -68,51 +68,8 @@ wss.on('connection', (ws, req) => {
 // Middleware
 app.use(helmet());
 app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        // Allow localhost variations
-        if (origin.includes('localhost:5173') || 
-            origin.includes('localhost:3000') ||
-            origin.includes('127.0.0.1:5173')) {
-            return callback(null, true);
-        }
-        
-        // Allow any origin from the same network (192.168.x.x, 172.x.x.x, 10.x.x.x)
-        const url = new URL(origin);
-        const hostname = url.hostname;
-        
-        // Check for local network IPs
-        if (hostname.match(/^192\.168\.\d+\.\d+$/) ||
-            hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+$/) ||
-            hostname.match(/^10\.\d+\.\d+\.\d+$/) ||
-            hostname === 'localhost' ||
-            hostname === '127.0.0.1') {
-            return callback(null, true);
-        }
-        
-        // For development, also allow the specific frontend URL
-        const allowedOrigins = [
-            process.env.FRONTEND_URL || 'http://localhost:5173',
-            'http://localhost:5173',
-            'http://localhost:3000',
-            'https://smart-stock-frontend.vercel.app'
-        ];
-        
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        
-        // Allow the production frontend URL
-        if (origin === process.env.FRONTEND_URL) {
-            return callback(null, true);
-        }
-        
-        // Reject other origins
-        callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true
+  origin: 'https://smart-stock-frontend.vercel.app',
+  credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
