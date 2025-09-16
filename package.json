@@ -35,6 +35,9 @@
     "stock",
     "business"
   ],
+  "engines": {
+    "node": "18.x"
+  },
   "author": "SmartStock Team",
   "license": "MIT"
 }
