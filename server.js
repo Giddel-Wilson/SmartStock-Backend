@@ -67,17 +67,16 @@ wss.on('connection', (ws, req) => {
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: 'https://smart-stock-frontend.vercel.app',
-  credentials: true
-}));
+        app.use(cors({
+                origin: 'https://smart-stock-frontend.vercel.app',
+                credentials: true
+        }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Explicitly handle preflight requests
-// Explicitly handle preflight requests for all routes
 app.options('*', (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL || '*');
+        res.setHeader('Access-Control-Allow-Origin', 'https://smart-stock-frontend.vercel.app');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
