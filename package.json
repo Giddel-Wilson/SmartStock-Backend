@@ -2,8 +2,9 @@
   "name": "smartstock-backend",
   "version": "1.0.0",
   "description": "SmartStock Inventory Management Backend",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node index.js",
     "dev": "nodemon server.js",
     "migrate": "node scripts/migrate.js",
     "seed": "node scripts/seed.js"
