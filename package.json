@@ -36,7 +36,7 @@
     "business"
   ],
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
   "author": "SmartStock Team",
   "license": "MIT"
