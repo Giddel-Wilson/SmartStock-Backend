@@ -1,0 +1,26 @@
+# Ignore Express.js routes and traditional server files
+routes/
+middleware/
+migrations/
+scripts/
+config/
+server.js
+mock-server.js
+simple-server.js
+debug-server.js
+test-server.js
+test-db.js
+test_migration.js
+run_department_migration.js
+
+# Ignore node_modules and common files
+node_modules/
+.env
+.env.local
+.env.production
+.env.development
+*.log
+.DS_Store
+
+# Keep only API serverless functions
+!api/
