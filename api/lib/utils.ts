@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import jwt, { SignOptions } from 'jsonwebtoken'
 import { VercelResponse } from '@vercel/node'
 
 // Password utilities
@@ -25,13 +25,23 @@ export function generateTokens(user: any) {
     }
   }
 
-  const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '15m'
-  })
+  const jwtSecret = process.env.JWT_SECRET
+  const refreshSecret = process.env.REFRESH_TOKEN_SECRET
+  
+  if (!jwtSecret || !refreshSecret) {
+    throw new Error('JWT secrets are not configured')
+  }
 
-  const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET!, {
-    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
-  })
+  const accessTokenOptions: SignOptions = {
+    expiresIn: (process.env.JWT_EXPIRES_IN || '24h') as string
+  }
+  
+  const refreshTokenOptions: SignOptions = {
+    expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || '30d') as string
+  }
+
+  const accessToken = jwt.sign(payload, jwtSecret, accessTokenOptions)
+  const refreshToken = jwt.sign(payload, refreshSecret, refreshTokenOptions)
 
   return { accessToken, refreshToken }
 }
