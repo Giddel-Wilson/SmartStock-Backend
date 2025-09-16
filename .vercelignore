@@ -1,10 +1,9 @@
-# Ignore Express.js routes and traditional server files
+# Ignore Express.js routes and traditional server files that shouldn't be deployed as functions
 routes/
 middleware/
 migrations/
 scripts/
 config/
-server.js
 mock-server.js
 simple-server.js
 debug-server.js
