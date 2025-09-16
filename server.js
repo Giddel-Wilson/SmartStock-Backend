@@ -103,6 +103,11 @@ app.use(cors({
             return callback(null, true);
         }
         
+        // Allow the production frontend URL
+        if (origin === 'https://smart-stock-frontend.vercel.app') {
+            return callback(null, true);
+        }
+        
         // Reject other origins
         callback(new Error('Not allowed by CORS'));
     },
@@ -110,6 +115,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Explicitly handle preflight requests
+app.options('*', cors());
 
 // Rate limiting
 app.use(rateLimiter);
