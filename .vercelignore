@@ -13,6 +13,9 @@ test-db.js
 test_migration.js
 run_department_migration.js
 
+# Ignore library files in API directory - these are imports, not functions
+api/lib/
+
 # Ignore node_modules and common files
 node_modules/
 .env
