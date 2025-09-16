@@ -104,7 +104,7 @@ app.use(cors({
         }
         
         // Allow the production frontend URL
-        if (origin === 'https://smart-stock-frontend.vercel.app') {
+        if (origin === process.env.FRONTEND_URL) {
             return callback(null, true);
         }
         
