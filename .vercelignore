@@ -27,3 +27,4 @@ node_modules/
 
 # Keep only API serverless functions
 !api/
+!api/config/**
