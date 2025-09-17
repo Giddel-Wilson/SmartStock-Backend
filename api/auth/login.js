@@ -1,5 +1,20 @@
 const path = require('path')
-const db = require(path.join(__dirname, '..', 'config', 'database'))
+let db
+try {
+  // Prefer the shared api config when available in the bundle
+  db = require(path.join(__dirname, '..', 'config', 'database'))
+} catch (err) {
+  // Fallback: create a Pool directly using DATABASE_URL so the function still works
+  const { Pool } = require('pg')
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+    max: 10
+  })
+  db = { query: (text, params) => pool.query(text, params), pool }
+}
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 

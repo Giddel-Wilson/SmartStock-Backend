@@ -1,4 +1,19 @@
-const db = require('./config/database')
+const path = require('path')
+let db
+try {
+  db = require(path.join(__dirname, 'config', 'database'))
+} catch (err) {
+  // Fallback: create a temporary Pool using DATABASE_URL
+  const { Pool } = require('pg')
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+    max: 10
+  })
+  db = { query: (text, params) => pool.query(text, params), pool }
+}
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
