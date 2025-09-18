@@ -63,9 +63,9 @@ module.exports = async (req, res) => {
     const isValid = await bcrypt.compare(password, user.password_hash)
     if (!isValid) return res.status(401).json({ error: 'Invalid credentials' })
 
-    const payload = { userId: user.id, email: user.email, role: user.role }
-    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '15m' })
-    const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET, { expiresIn: '7d' })
+  const jwtPayload = { userId: user.id, email: user.email, role: user.role }
+  const accessToken = jwt.sign(jwtPayload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '15m' })
+  const refreshToken = jwt.sign(jwtPayload, process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET, { expiresIn: '7d' })
 
     // Store refresh token hash (best-effort; ignore errors here)
     try {
@@ -75,7 +75,8 @@ module.exports = async (req, res) => {
       console.warn('Warning: failed to store refresh token hash', err && err.message)
     }
 
-    return res.json({
+    // Return both top-level shape and a nested `data.data` shape some frontends expect
+    const payload = {
       message: 'Login successful',
       user: {
         id: user.id,
@@ -89,7 +90,9 @@ module.exports = async (req, res) => {
       },
       accessToken,
       refreshToken
-    })
+    }
+
+    return res.json(Object.assign({}, payload, { data: { data: { user: payload.user, accessToken, refreshToken } } }))
   } catch (error) {
     console.error('Login error (serverless):', error)
     return res.status(500).json({ error: 'Login failed' })
