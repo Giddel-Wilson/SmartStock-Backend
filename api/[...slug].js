@@ -25,23 +25,63 @@ const ALLOWED_ORIGINS = [
 
 function setCorsHeaders(req, res) {
   const origin = req.headers.origin
+  // If credentials are used, do not set wildcard origin
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin)
   } else {
+    // Fallback to wildcard for simple requests
     res.setHeader('Access-Control-Allow-Origin', '*')
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  // allow credentials when origin is specific
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+  }
+}
+
+function sendSuccess(res, payload = {}, nestedData = null, status = 200) {
+  // Normalize success response: top-level + nested data.data
+  const top = Object.assign({}, payload)
+  const nested = nestedData == null ? payload : nestedData
+  const body = Object.assign({}, top, { data: { data: nested } })
+  res.status(status).json(body)
+}
+
+function sendError(res, message = 'Server error', status = 500, details = null) {
+  const body = { success: false, error: message }
+  if (details) body.details = details
+  res.status(status).json(body)
 }
 
 async function handleHealth(req, res) {
-  return res.status(200).json({ status: 'ok', message: 'SmartStock API (serverless) - health check', timestamp: new Date().toISOString() })
+  return sendSuccess(res, { status: 'ok', message: 'SmartStock API (serverless) - health check', timestamp: new Date().toISOString() }, { status: 'ok' }, 200)
 }
 
 async function handleLogin(req, res) {
-  const { email, password } = req.body || {}
-  if (!email || !password) return res.status(400).json({ error: 'Email and password required' })
+  // Be tolerant of different request shapes from various frontends
+  let body = req.body || {}
+  const contentType = (req.headers['content-type'] || req.headers['Content-Type'] || '').toLowerCase()
+  // If body is a string, try JSON parse first
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body) } catch (e) { /* leave as string */ }
+  }
+  // If content-type is urlencoded (common when using qs.stringify), parse it
+  if (typeof body === 'string' && contentType.includes('application/x-www-form-urlencoded')) {
+    try {
+      const qs = require('querystring')
+      body = qs.parse(body)
+    } catch (e) {
+      // ignore
+    }
+  }
+  // If request is JSON but wrapped under req.body.data (some clients), we'll handle below
+  console.warn('login request headers:', { 'content-type': contentType })
+  // support: { email, password } or { data: { email, password } } or { payload: {...} }
+  const email = body?.email || body?.data?.email || body?.payload?.email || body?.user?.email
+  const password = body?.password || body?.data?.password || body?.payload?.password || body?.user?.password
+  console.warn('login request payload preview:', (body && typeof body === 'object') ? Object.keys(body).slice(0,10) : typeof body)
+  if (!email || !password) return sendError(res, 'Email and password required', 400)
 
   const result = await db.query(`
     SELECT u.*, d.name as department_name
@@ -51,14 +91,22 @@ async function handleLogin(req, res) {
   `, [email])
 
   if (result.rows.length === 0) {
-    return res.status(401).json({ error: 'Invalid credentials' })
+    // include safe hint for debugging (do not expose sensitive info)
+    console.warn('login failed: user not found for email=', email)
+    return sendError(res, 'Invalid credentials', 401)
   }
 
   const user = result.rows[0]
-  if (!user.is_active) return res.status(401).json({ error: 'Account is deactivated' })
+  if (!user.is_active) {
+    console.warn('login failed: account deactivated for user=', user.id)
+    return sendError(res, 'Account is deactivated', 401)
+  }
 
   const isValid = await bcrypt.compare(password, user.password_hash)
-  if (!isValid) return res.status(401).json({ error: 'Invalid credentials' })
+  if (!isValid) {
+    console.warn('login failed: invalid password for user=', user.id)
+    return sendError(res, 'Invalid credentials', 401)
+  }
 
   const payload = { userId: user.id, email: user.email, role: user.role }
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '15m' })
@@ -72,7 +120,7 @@ async function handleLogin(req, res) {
     console.warn('Warning: failed to store refresh token hash', err && err.message)
   }
 
-  return res.json({
+  return sendSuccess(res, {
     message: 'Login successful',
     user: {
       id: user.id,
@@ -86,7 +134,7 @@ async function handleLogin(req, res) {
     },
     accessToken,
     refreshToken
-  })
+  }, { user: { id: user.id, name: user.name, email: user.email, role: user.role, department_id: user.department_id, department_name: user.department_name, phone: user.phone, last_login: user.last_login }, accessToken, refreshToken }, 200)
 }
 
 function verifyToken(req) {
@@ -106,7 +154,7 @@ async function handleUsers(req, res) {
   if (!decoded) return res.status(401).json({ error: 'Invalid token' })
 
   const result = await db.query('SELECT id, name, email, role, phone, department_id, is_active, last_login, created_at FROM users ORDER BY name')
-  return res.json({ users: result.rows })
+  return sendSuccess(res, { users: result.rows }, { users: result.rows }, 200)
 }
 
 async function handleProducts(req, res) {
@@ -121,7 +169,7 @@ async function handleProducts(req, res) {
     LEFT JOIN departments d ON p.department_id = d.id
     ORDER BY p.name
   `)
-  return res.json({ products: result.rows })
+  return sendSuccess(res, { products: result.rows }, { products: result.rows }, 200)
 }
 
 async function handleCategories(req, res) {
@@ -129,7 +177,7 @@ async function handleCategories(req, res) {
   if (!decoded) return res.status(401).json({ error: 'Invalid token' })
 
   const result = await db.query('SELECT id, name, description, created_at, updated_at FROM categories ORDER BY name')
-  return res.json({ categories: result.rows })
+  return sendSuccess(res, { categories: result.rows }, { categories: result.rows }, 200)
 }
 
 async function handleDepartments(req, res) {
@@ -137,7 +185,7 @@ async function handleDepartments(req, res) {
   if (!decoded) return res.status(401).json({ error: 'Invalid token' })
 
   const result = await db.query('SELECT id, name, description, created_at, updated_at FROM departments ORDER BY name')
-  return res.json({ departments: result.rows })
+  return sendSuccess(res, { departments: result.rows }, { departments: result.rows }, 200)
 }
 
 module.exports = async (req, res) => {
