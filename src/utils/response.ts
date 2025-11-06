@@ -1,10 +1,10 @@
 import { Response } from 'express';
 
 export function successResponse(res: Response, payload: any) {
-  // Return response with nested data structure for frontend compatibility
-  // Frontend expects response.data.data to contain the actual payload
+  // Frontend expects response.data.data to contain the payload
+  // Axios receives the response, so response.data will be what we send
+  // We need to send: { data: { data: payload } }
   return res.json({
-    success: true,
     data: {
       data: payload
     }
