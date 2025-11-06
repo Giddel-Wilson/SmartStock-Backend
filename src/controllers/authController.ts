@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
+import Department from '../models/Department';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { successResponse, errorResponse } from '../utils/response';
 import bcrypt from 'bcryptjs';
@@ -8,7 +9,7 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body?.data?.data || req.body?.data || req.body;
     
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate('departmentId');
     if (!user || !user.isActive) {
       return errorResponse(res, 'Invalid credentials', 401);
     }
@@ -53,6 +54,13 @@ export const login = async (req: Request, res: Response) => {
     user.lastLogin = new Date();
     await user.save();
     
+    // Get department info if exists
+    let departmentName = null;
+    if (user.departmentId) {
+      const dept = await Department.findById(user.departmentId);
+      departmentName = dept?.name || null;
+    }
+    
     return successResponse(res, {
       message: 'Login successful',
       user: {
@@ -60,8 +68,8 @@ export const login = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        department_id: user.departmentId || null,
-        department_name: null, // Populate if needed
+        department_id: user.departmentId?.toString() || null,
+        department_name: departmentName,
         phone: user.phone || null,
         last_login: user.lastLogin || null
       },

@@ -1,11 +1,8 @@
 import { Response } from 'express';
 
 export function successResponse(res: Response, payload: any) {
-  // Top-level and nested compatibility
-  return res.json({
-    ...payload,
-    data: { data: payload }
-  });
+  // Return clean response without unnecessary nesting
+  return res.json(payload);
 }
 
 export function errorResponse(res: Response, error: string, status = 400) {
