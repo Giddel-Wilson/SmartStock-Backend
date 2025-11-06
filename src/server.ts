@@ -30,12 +30,42 @@ import productRoutes from './routes/products';
 import categoryRoutes from './routes/categories';
 import departmentRoutes from './routes/departments';
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'SmartStock Backend API',
+    status: 'running',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth/*',
+      users: '/api/users/*',
+      products: '/api/products/*',
+      categories: '/api/categories/*',
+      departments: '/api/departments/*'
+    }
+  });
+});
+
+// Handle favicon requests
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+app.get('/favicon.png', (req, res) => res.status(204).end());
+
 app.use('/api', healthRoutes);
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', productRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', departmentRoutes);
+
+// 404 handler for undefined routes
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route not found',
+    path: req.originalUrl
+  });
+});
 
 // Connect to MongoDB
 mongoose.connect(process.env.DATABASE_URL || '', {
