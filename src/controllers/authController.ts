@@ -28,8 +28,8 @@ export const login = async (req: Request, res: Response) => {
     }
 
     // Define expiration times with proper typing for JWT
-    const accessTokenExpiry: string | number = process.env.JWT_EXPIRES_IN || '1h';
-    const refreshTokenExpiry: string | number = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+    const accessTokenExpiry = process.env.JWT_EXPIRES_IN || '1h';
+    const refreshTokenExpiry = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
     
     const accessTokenOptions: SignOptions = { 
       expiresIn: accessTokenExpiry
