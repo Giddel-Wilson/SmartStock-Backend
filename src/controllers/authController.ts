@@ -45,14 +45,19 @@ export const login = async (req: Request, res: Response) => {
     user.lastLogin = new Date();
     await user.save();
     
-    // Log login activity
-    await ActivityLog.create({
-      userId: user._id,
-      action: 'login',
-      details: 'User logged in successfully',
-      ipAddress: req.ip || req.headers['x-forwarded-for'] as string || null,
-      userAgent: req.headers['user-agent'] || null
-    });
+    // Log login activity (non-blocking, don't fail if logging fails)
+    try {
+      await ActivityLog.create({
+        userId: user._id,
+        action: 'login',
+        details: 'User logged in successfully',
+        ipAddress: req.ip || req.headers['x-forwarded-for'] as string || null,
+        userAgent: req.headers['user-agent'] || null
+      });
+    } catch (logError) {
+      console.error('Failed to log activity:', logError);
+      // Continue with login even if activity logging fails
+    }
     
     // Get department info if exists
     let departmentName = null;
