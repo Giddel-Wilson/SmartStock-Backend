@@ -1,13 +1,13 @@
 import { Response } from 'express';
 
 export function successResponse(res: Response, payload: any) {
-  // Frontend expects response.data.data to contain the payload
-  // Axios receives the response, so response.data will be what we send
-  // We need to send: { data: { data: payload } }
+  // Frontend expects: response.data.data.user, response.data.data.accessToken, etc.
+  // Axios puts HTTP response body in response.data
+  // So we send: { data: payload }
+  // Result: response.data = { data: payload }
+  // Frontend gets: response.data.data = payload (which has user, accessToken, etc.)
   return res.json({
-    data: {
-      data: payload
-    }
+    data: payload
   });
 }
 
