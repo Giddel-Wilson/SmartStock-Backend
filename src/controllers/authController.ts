@@ -91,3 +91,16 @@ export const login = async (req: Request, res: Response) => {
     return errorResponse(res, 'Login failed', 500);
   }
 };
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    // In a stateless JWT system, logout is handled client-side by removing tokens
+    // But we can log the activity if needed
+    return successResponse(res, {
+      message: 'Logout successful'
+    });
+  } catch (err) {
+    console.error('Logout error:', err);
+    return errorResponse(res, 'Logout failed', 500);
+  }
+};
