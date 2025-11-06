@@ -67,17 +67,24 @@ app.use('*', (req, res) => {
   });
 });
 
-// Connect to MongoDB
+// Connect to MongoDB (for serverless, connection is established on each request)
 mongoose.connect(process.env.DATABASE_URL || '', {
   // useNewUrlParser: true,
   // useUnifiedTopology: true,
 })
   .then(() => {
     console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err);
   });
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+// Export for Vercel serverless
+export default app;
