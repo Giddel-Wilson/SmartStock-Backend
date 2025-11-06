@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import User from '../src/models/User';
+import Department from '../src/models/Department';
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +18,18 @@ const createAdminUser = async () => {
 
     await mongoose.connect(dbUrl);
     console.log('Connected to MongoDB');
+
+    // Create or get Management department
+    let managementDept = await Department.findOne({ name: 'Management' });
+    if (!managementDept) {
+      managementDept = await Department.create({
+        name: 'Management',
+        description: 'Management department for system administrators'
+      });
+      console.log('✅ Management department created');
+    } else {
+      console.log('Management department already exists');
+    }
 
     // Admin user details
     const adminEmail = 'admin@smartstock.com';
@@ -41,6 +54,7 @@ const createAdminUser = async () => {
       email: adminEmail,
       password: hashedPassword,
       role: 'admin',
+      departmentId: managementDept._id,
       isActive: true,
       phone: '+1234567890'
     });
@@ -51,6 +65,7 @@ const createAdminUser = async () => {
     console.log('==================================');
     console.log('Email:', adminEmail);
     console.log('Password:', adminPassword);
+    console.log('Department:', managementDept.name);
     console.log('==================================');
     console.log('⚠️  IMPORTANT: Change the password after first login!');
 

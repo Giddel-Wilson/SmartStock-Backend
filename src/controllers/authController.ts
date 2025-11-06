@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
 import Department from '../models/Department';
+import ActivityLog from '../models/ActivityLog';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { successResponse, errorResponse } from '../utils/response';
 import bcrypt from 'bcryptjs';
@@ -53,6 +54,15 @@ export const login = async (req: Request, res: Response) => {
     
     user.lastLogin = new Date();
     await user.save();
+    
+    // Log login activity
+    await ActivityLog.create({
+      userId: user._id,
+      action: 'login',
+      details: 'User logged in successfully',
+      ipAddress: req.ip || req.headers['x-forwarded-for'] as string || null,
+      userAgent: req.headers['user-agent'] || null
+    });
     
     // Get department info if exists
     let departmentName = null;

@@ -29,6 +29,9 @@ import userRoutes from './routes/users';
 import productRoutes from './routes/products';
 import categoryRoutes from './routes/categories';
 import departmentRoutes from './routes/departments';
+import inventoryRoutes from './routes/inventory';
+import alertRoutes from './routes/alerts';
+import activityRoutes from './routes/activity';
 
 // Root route
 app.get('/', (req, res) => {
@@ -42,7 +45,10 @@ app.get('/', (req, res) => {
       users: '/api/users/*',
       products: '/api/products/*',
       categories: '/api/categories/*',
-      departments: '/api/departments/*'
+      departments: '/api/departments/*',
+      inventory: '/api/inventory/*',
+      alerts: '/api/alerts/*',
+      activity: '/api/activity/*'
     }
   });
 });
@@ -57,6 +63,9 @@ app.use('/api', userRoutes);
 app.use('/api', productRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', departmentRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/alerts', alertRoutes);
+app.use('/api/activity', activityRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res) => {
