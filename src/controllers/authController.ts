@@ -61,9 +61,14 @@ export const login = async (req: Request, res: Response) => {
     
     // Get department info if exists
     let departmentName = null;
-    if (user.departmentId) {
-      const dept = await Department.findById(user.departmentId);
-      departmentName = dept?.name || null;
+    try {
+      if (user.departmentId) {
+        const dept = await Department.findById(user.departmentId);
+        departmentName = dept?.name || null;
+      }
+    } catch (deptError) {
+      console.error('Failed to fetch department:', deptError);
+      // Continue without department name
     }
     
     return successResponse(res, {
@@ -82,6 +87,7 @@ export const login = async (req: Request, res: Response) => {
       refreshToken
     });
   } catch (err) {
+    console.error('Login error:', err);
     return errorResponse(res, 'Login failed', 500);
   }
 };
