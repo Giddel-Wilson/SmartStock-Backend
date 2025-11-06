@@ -59,7 +59,7 @@ app.use('/api', categoryRoutes);
 app.use('/api', departmentRoutes);
 
 // 404 handler for undefined routes
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: 'Route not found',
