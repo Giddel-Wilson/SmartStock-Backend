@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import User from '../models/User';
 import Department from '../models/Department';
 import ActivityLog from '../models/ActivityLog';
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { successResponse, errorResponse } from '../utils/response';
 import bcrypt from 'bcryptjs';
 
@@ -29,27 +29,17 @@ export const login = async (req: Request, res: Response) => {
       return errorResponse(res, 'Server configuration error', 500);
     }
 
-    // Define expiration times with proper typing for JWT
-    const accessTokenExpiry = process.env.JWT_EXPIRES_IN || '1h';
-    const refreshTokenExpiry = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
-    
-    const accessTokenOptions: SignOptions = { 
-      expiresIn: accessTokenExpiry
-    };
-    const refreshTokenOptions: SignOptions = { 
-      expiresIn: refreshTokenExpiry
-    };
-    
+    // Define expiration times for JWT
     const accessToken = jwt.sign(
       { userId: user._id, email: user.email, role: user.role },
       jwtSecret,
-      accessTokenOptions
+      { expiresIn: process.env.JWT_EXPIRES_IN || '1h' } as jwt.SignOptions
     );
 
     const refreshToken = jwt.sign(
       { userId: user._id },
       refreshTokenSecret,
-      refreshTokenOptions
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' } as jwt.SignOptions
     );
     
     user.lastLogin = new Date();
