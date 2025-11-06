@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { connectDB } from './config/db';
 dotenv.config();
 
 // Load environment variables
@@ -21,6 +22,20 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+// Middleware to ensure MongoDB connection before each request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    res.status(503).json({
+      success: false,
+      error: 'Database connection failed. Please try again later.'
+    });
+  }
+});
 
 // Import and use route modules
 import healthRoutes from './routes/health';
@@ -76,17 +91,10 @@ app.use((req, res) => {
   });
 });
 
-// Connect to MongoDB (for serverless, connection is established on each request)
-mongoose.connect(process.env.DATABASE_URL || '', {
-  // useNewUrlParser: true,
-  // useUnifiedTopology: true,
-})
-  .then(() => {
-    console.log('Connected to MongoDB');
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-  });
+// Initialize MongoDB connection
+connectDB().catch(err => {
+  console.error('Failed to connect to MongoDB:', err);
+});
 
 // For local development
 if (process.env.NODE_ENV !== 'production') {
